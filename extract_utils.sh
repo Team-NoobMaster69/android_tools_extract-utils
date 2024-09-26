@@ -228,11 +228,21 @@ function prefix_match() {
     for LINE in "${PRODUCT_PACKAGES_LIST[@]}"; do
         local FILE=$(target_file "$LINE")
         if [[ "$FILE" =~ ^"$PREFIX" ]]; then
-            local ARGS=$(target_args "$LINE")
-            if [[ -z "${ARGS}" || "${ARGS}" =~ 'SYMLINK' ]]; then
-                NEW_ARRAY+=("${FILE#$PREFIX}")
+            local SPEC_ARGS="${ARGS_LIST[$i - 1]}"
+            local ARGS=(${SPEC_ARGS//;/ })
+            local FILTERED_ARGS=()
+
+            for ARG in "${ARGS[@]}"; do
+                if [[ "$ARG" =~ ^SYMLINK= ]]; then
+                    continue
+                fi
+                FILTERED_ARGS+=("$ARG")
+            done
+
+            if [ ${#FILTERED_ARGS[@]} -eq 0 ]; then
+                NEW_ARRAY+=("${FILE#"$PREFIX"}")
             else
-                NEW_ARRAY+=("${FILE#$PREFIX};${ARGS}")
+                NEW_ARRAY+=("${FILE#"$PREFIX"};${FILTERED_ARGS}")
             fi
         fi
     done
